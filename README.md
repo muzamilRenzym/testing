@@ -31,7 +31,7 @@ The FFT/IFFT core working mode depends on three main configurations:
 
 ## 🔹 Real-Time vs Non-Real-Time
 
-| Property | Real-Time | Non-Real-Time |
+| Design Aspect | Real-Time | Non-Real-Time |
 |-----------|------------|----------------|
 | Requires Continuous Data | ✅ Yes | ❌ No |
 | Uses FIFO Generator (FWFT) | ✅ Yes | ❌ No |
@@ -52,7 +52,7 @@ The FFT/IFFT core working mode depends on three main configurations:
 
 ## 🔹 Scaled vs Unscaled Operation
 
-| Property | Scaled | Unscaled |
+| Operational Aspect | Scaled | Unscaled |
 |-----------|---------|-----------|
 | Overflow Protection | ✅ Enabled | ❌ Disabled |
 | Scaling Factor | User-defined (per stage) | None |
@@ -84,34 +84,23 @@ Parameters like **FFT length**, **direction**, and **scaling** are configured dy
 - By deasserting `s_axis_config_tvalid` after the handshake, the design ensures that `s_axis_config_tready` can go high again before the next frame — allowing a new configuration to be applied for the following operation.
 
 
-**Example Bit Mapping (Runtime Mode):**
+## 🔹 Example Bit Mapping (Runtime Mode)
 
-🔹 **Unscaled (Runtime)**
-[15:0] = Configuration Word
-[4:0] = FFT Length
-[8] = Direction (1 = FFT, 0 = IFFT)
-
-🔹 **Scaled (Runtime)**
-[23:0] = Configuration Word
-[4:0] = FFT Length
-[8] = Direction (1 = FFT, 0 = IFFT)
-[18:9] = Scaling Schedule Bits
-
+| Mode | Configuration Word | FFT Length | Direction | Scaling Schedule Bits |
+|------|--------------------|-------------|------------|------------------------|
+| **Unscaled (Runtime)** | [15:0] | [4:0] | [8] | — |
+| **Scaled (Runtime)** | [23:0] | [4:0] | [8] | [18:9] |
 
 ---
 
-### 🧩 Non-Runtime Configuration Mode
+## 🧩 Non-Runtime Configuration Mode  
 Configuration is fixed during synthesis or initialization.  
 No valid/ready handshake is required — configuration is set once.
 
-**Example Bit Mapping (Non-Runtime Mode):**
-
-🔹 **Unscaled (Non-Runtime)**
-[7:0] = [0] Direction (1 = FFT, 0 = IFFT)
-
-🔹 **Scaled (Non-Runtime)**
-[15:0] = [0] Direction (1 = FFT, 0 = IFFT)
-[10:1] Scaling Schedule Bits
+| Mode | Configuration Word | Direction | Scaling Schedule Bits |
+|------|--------------------|------------|------------------------|
+| **Unscaled (Non-Runtime)** | [7:0] | [0] | — |
+| **Scaled (Non-Runtime)** | [15:0] | [0] | [10:1] |
 
 ---
 
@@ -120,7 +109,7 @@ No valid/ready handshake is required — configuration is set once.
 ### Input Data Format (Fixed-Point)
 Both Scaled and Unscaled use the same packed input format:
 
-[31:16] = Imaginary Part
+[31:16] = Imaginary Part  
 [15:0] = Real Part
 
 ### Output Data Format (Fixed-Point)
@@ -134,8 +123,6 @@ Both Scaled and Unscaled use the same packed input format:
 - **Unscaled mode** expands bit width to maintain full-precision results from multiplication and accumulation.
 
 ---
----
-
 ## 🔹 Summary Table
 
 | Mode | Scaling | Configuration | Data Type | Real-Time | Data Source | Notes |

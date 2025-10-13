@@ -202,7 +202,7 @@ E:\Program Files\MATLAB\R2024a\extern\lib\win64\microsoft
 
 📸 **Screenshot Example:**
 
-![C-Model Setup](microsoft.JPEG)
+![C-Model Setup](microsoft.png)
 
 ---
 

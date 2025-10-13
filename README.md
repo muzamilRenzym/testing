@@ -175,7 +175,7 @@ E:\Program Files\MATLAB\R2024a\extern\include
 ```
 📸 **Screenshot Example:**
 
-![C-Model Setup](include.PNG)
+![C-Model Setup](include.png)
 ---
 
 ### 🔹 Additional Dependencies

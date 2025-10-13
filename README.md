@@ -176,7 +176,7 @@ $(CoreLibraryDependencies);%(AdditionalDependencies);libmx.lib;libmex.lib
 ```
 📸 **Screenshot Example:**
 
-![C-Model Setup](lib.png)
+![C-Model Setup](/screenshots/lib.png)
 ---
 
 ### 🔹 Update Library Path
@@ -191,7 +191,7 @@ E:\Program Files\MATLAB\R2024a\extern\lib\win64\microsoft
 
 📸 **Screenshot Example:**
 
-![C-Model Setup](microsoft.png)
+![C-Model Setup](/screenshots/microsoft.png)
 
 ---
 
@@ -219,7 +219,7 @@ E:\Program Files\MATLAB\R2024a\bin
 
 📸 **Screenshot Example:**
 
-![Env variable Setup](env.png)
+![Env variable Setup](/screenshots/env.png)
 
 ---
 

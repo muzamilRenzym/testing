@@ -109,8 +109,10 @@ No valid/ready handshake is required — configuration is set once.
 ### Input Data Format (Fixed-Point)
 Both Scaled and Unscaled use the same packed input format:
 
-[31:16] = Imaginary Part  
-[15:0] = Real Part
+| Mode | Real Bits | Imag Bits |
+|------|------------|-----------|
+| Scaled | [15:0] | [31:16] |
+| Unscaled | [15:0] | [31:16] |
 
 ### Output Data Format (Fixed-Point)
 | Mode | Real Bits | Imag Bits |

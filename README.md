@@ -361,10 +361,27 @@ scale = 2^15;
 complexSignal_fixed = (round(complexSignal_float * scale)) 
 floatsignal = complexSignal_fixed/ scale;
 ```
-To match the hardware FFT/IFFT input precision, each complex sample is represented in IQ (1.15) format —a 16-bit signed fixed-point representation where:
-- 1 bit → Sign
-- 15 bits → Fractional magnitude
-This provides a numeric range of `–1.0 ≤ x < +1.0`, scaled by `2^15`.
+## 🔹 Output Precision and Data Range
+
+If the FFT is **scaled** or uses **block floating-point**  
+(`C_HAS_SCALING = 1`, `C_HAS_BFP = 0 or 1`):
+
+- Output data (`xk_re`, `xk_im`) is in the range **-1.0 ≤ data < +1.0**.  
+- Precision is **C_INPUT_WIDTH** bits with **(C_INPUT_WIDTH - 1)** fractional bits.  
+- Example: For `C_INPUT_WIDTH = 8`, precision = 2⁻⁷ = 0.0078125,  
+  range = **-1.0 to +0.9921875**, format = **s.fffffff**  
+  (`s` = sign bit, `f` = fractional bits).
+
+If the FFT is **unscaled** (`C_HAS_SCALING = 0`):
+
+- Output data grows beyond ±1.0 while keeping the same binary point position.  
+- Fractional precision remains **(C_INPUT_WIDTH - 1)** bits.  
+- Total precision = **C_INPUT_WIDTH + C_NFFT_MAX + 1** bits.  
+- Example: For `C_INPUT_WIDTH = 8`, `C_NFFT_MAX = 3`,  
+  precision = 2⁻⁷ = 0.0078125,  
+  range = **-16.0 to +15.9921875**, format = **siiii.fffffff**  
+  (`s` = sign bit, `i` = integer bits, `f` = fractional bits).
+
 
 ### 📁 2. Writing Input Data for C-Model
 The quantized complex signal is written to a text file data.h

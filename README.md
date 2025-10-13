@@ -31,7 +31,7 @@ The FFT/IFFT core working mode depends on three main configurations:
 
 ## 🔹 Real-Time vs Non-Real-Time
 
-| Property | Real-Time | Non-Real-Time |
+| Design Aspect | Real-Time | Non-Real-Time |
 |-----------|------------|----------------|
 | Requires Continuous Data | ✅ Yes | ❌ No |
 | Uses FIFO Generator (FWFT) | ✅ Yes | ❌ No |
@@ -52,7 +52,7 @@ The FFT/IFFT core working mode depends on three main configurations:
 
 ## 🔹 Scaled vs Unscaled Operation
 
-| Property | Scaled | Unscaled |
+| Operational Aspect | Scaled | Unscaled |
 |-----------|---------|-----------|
 | Overflow Protection | ✅ Enabled | ❌ Disabled |
 | Scaling Factor | User-defined (per stage) | None |
@@ -84,34 +84,23 @@ Parameters like **FFT length**, **direction**, and **scaling** are configured dy
 - By deasserting `s_axis_config_tvalid` after the handshake, the design ensures that `s_axis_config_tready` can go high again before the next frame — allowing a new configuration to be applied for the following operation.
 
 
-**Example Bit Mapping (Runtime Mode):**
+## 🔹 Example Bit Mapping (Runtime Mode)
 
-🔹 **Unscaled (Runtime)**
-[15:0] = Configuration Word
-[4:0] = FFT Length
-[8] = Direction (1 = FFT, 0 = IFFT)
-
-🔹 **Scaled (Runtime)**
-[23:0] = Configuration Word
-[4:0] = FFT Length
-[8] = Direction (1 = FFT, 0 = IFFT)
-[18:9] = Scaling Schedule Bits
-
+| Mode | Configuration Word | FFT Length | Direction | Scaling Schedule Bits |
+|------|--------------------|-------------|------------|------------------------|
+| **Unscaled (Runtime)** | [15:0] | [4:0] | [8] | — |
+| **Scaled (Runtime)** | [23:0] | [4:0] | [8] | [18:9] |
 
 ---
 
-### 🧩 Non-Runtime Configuration Mode
+## 🧩 Non-Runtime Configuration Mode  
 Configuration is fixed during synthesis or initialization.  
 No valid/ready handshake is required — configuration is set once.
 
-**Example Bit Mapping (Non-Runtime Mode):**
-
-🔹 **Unscaled (Non-Runtime)**
-[7:0] = [0] Direction (1 = FFT, 0 = IFFT)
-
-🔹 **Scaled (Non-Runtime)**
-[15:0] = [0] Direction (1 = FFT, 0 = IFFT)
-[10:1] Scaling Schedule Bits
+| Mode | Configuration Word | Direction | Scaling Schedule Bits |
+|------|--------------------|------------|------------------------|
+| **Unscaled (Non-Runtime)** | [7:0] | [0] | — |
+| **Scaled (Non-Runtime)** | [15:0] | [0] | [10:1] |
 
 ---
 
@@ -120,8 +109,10 @@ No valid/ready handshake is required — configuration is set once.
 ### Input Data Format (Fixed-Point)
 Both Scaled and Unscaled use the same packed input format:
 
-[31:16] = Imaginary Part
-[15:0] = Real Part
+| Mode | Real Bits | Imag Bits |
+|------|------------|-----------|
+| Scaled | [15:0] | [31:16] |
+| Unscaled | [15:0] | [31:16] |
 
 ### Output Data Format (Fixed-Point)
 | Mode | Real Bits | Imag Bits |
@@ -134,8 +125,6 @@ Both Scaled and Unscaled use the same packed input format:
 - **Unscaled mode** expands bit width to maintain full-precision results from multiplication and accumulation.
 
 ---
----
-
 ## 🔹 Summary Table
 
 | Mode | Scaling | Configuration | Data Type | Real-Time | Data Source | Notes |
@@ -175,7 +164,7 @@ E:\Program Files\MATLAB\R2024a\extern\include
 ```
 📸 **Screenshot Example:**
 
-![C-Model Setup](include.PNG)
+![C-Model Setup](include.png)
 ---
 
 ### 🔹 Additional Dependencies
@@ -187,7 +176,7 @@ $(CoreLibraryDependencies);%(AdditionalDependencies);libmx.lib;libmex.lib
 ```
 📸 **Screenshot Example:**
 
-![C-Model Setup](lib.PNG)
+![C-Model Setup](lib.png)
 ---
 
 ### 🔹 Update Library Path
@@ -202,7 +191,7 @@ E:\Program Files\MATLAB\R2024a\extern\lib\win64\microsoft
 
 📸 **Screenshot Example:**
 
-![C-Model Setup](microsoft.JPEG)
+![C-Model Setup](microsoft.png)
 
 ---
 
@@ -230,7 +219,7 @@ E:\Program Files\MATLAB\R2024a\bin
 
 📸 **Screenshot Example:**
 
-![Env variable Setup](env.PNG)
+![Env variable Setup](env.png)
 
 ---
 
@@ -372,10 +361,27 @@ scale = 2^15;
 complexSignal_fixed = (round(complexSignal_float * scale)) 
 floatsignal = complexSignal_fixed/ scale;
 ```
-To match the hardware FFT/IFFT input precision, each complex sample is represented in IQ (1.15) format —a 16-bit signed fixed-point representation where:
-- 1 bit → Sign
-- 15 bits → Fractional magnitude
-This provides a numeric range of `–1.0 ≤ x < +1.0`, scaled by `2^15`.
+## 🔹 Output Precision and Data Range
+
+If the FFT is **scaled** or uses **block floating-point**  
+(`C_HAS_SCALING = 1`, `C_HAS_BFP = 0 or 1`):
+
+- Output data (`xk_re`, `xk_im`) is in the range **-1.0 ≤ data < +1.0**.  
+- Precision is **C_INPUT_WIDTH** bits with **(C_INPUT_WIDTH - 1)** fractional bits.  
+- Example: For `C_INPUT_WIDTH = 8`, precision = 2⁻⁷ = 0.0078125,  
+  range = **-1.0 to +0.9921875**, format = **s.fffffff**  
+  (`s` = sign bit, `f` = fractional bits).
+
+If the FFT is **unscaled** (`C_HAS_SCALING = 0`):
+
+- Output data grows beyond ±1.0 while keeping the same binary point position.  
+- Fractional precision remains **(C_INPUT_WIDTH - 1)** bits.  
+- Total precision = **C_INPUT_WIDTH + C_NFFT_MAX + 1** bits.  
+- Example: For `C_INPUT_WIDTH = 8`, `C_NFFT_MAX = 3`,  
+  precision = 2⁻⁷ = 0.0078125,  
+  range = **-16.0 to +15.9921875**, format = **siiii.fffffff**  
+  (`s` = sign bit, `i` = integer bits, `f` = fractional bits).
+
 
 ### 📁 2. Writing Input Data for C-Model
 The quantized complex signal is written to a text file data.h
